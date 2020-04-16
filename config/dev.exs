@@ -46,8 +46,7 @@ config :show_me_the_code, ShowMeTheCodeWeb.Endpoint,
       ~r"lib/show_me_the_code_web/(live|views)/.*(ex)$",
       ~r"lib/show_me_the_code_web/templates/.*(eex)$"
     ]
-  ],
-  watchers: [yarn: ["run", "dev", cd: Path.expand("../webapp", __DIR__)]]
+  ]
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

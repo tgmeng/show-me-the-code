@@ -13,11 +13,4 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
     broadcast!(socket, "new_msg", %{body: body})
     {:noreply, socket}
   end
-
-  intercept ["user_joined"]
-
-  def handle_out("user_joined", msg, socket) do
-    IO.inspect(socket, msg)
-    push(socket, "user_joined", msg)
-  end
 end

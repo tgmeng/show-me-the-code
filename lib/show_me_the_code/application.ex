@@ -9,9 +9,11 @@ defmodule ShowMeTheCode.Application do
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      ShowMeTheCodeWeb.Endpoint
+      ShowMeTheCodeWeb.Endpoint,
       # Starts a worker by calling: ShowMeTheCode.Worker.start_link(arg)
       # {ShowMeTheCode.Worker, arg},
+      ShowMeTheCodeWeb.Presence,
+      {ShowMeTheCode.Repo, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

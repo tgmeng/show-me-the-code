@@ -7,6 +7,15 @@
 # General application configuration
 use Mix.Config
 
+config :show_me_the_code, ShowMeTheCode.Repo,
+  database: "show_me_the_code_repo",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost"
+
+config :show_me_the_code,
+  ecto_repos: [ShowMeTheCode.Repo]
+
 # Configures the endpoint
 config :show_me_the_code, ShowMeTheCodeWeb.Endpoint,
   url: [host: "localhost"],
