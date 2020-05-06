@@ -1,6 +1,8 @@
 defmodule ShowMeTheCodeWeb.UserSocket do
   use Phoenix.Socket
 
+  @max_age 24 * 60 * 60
+
   ## Channels
   channel "room:*", ShowMeTheCodeWeb.RoomChannel
 
@@ -20,10 +22,10 @@ defmodule ShowMeTheCodeWeb.UserSocket do
            socket,
            Application.fetch_env!(:show_me_the_code, :user_salt),
            token,
-           max_age: 86400
+           max_age: @max_age
          ) do
       {:ok, user_id} ->
-        {:ok, assign(socket, :user, user_id)}
+        {:ok, assign(socket, :user_id, user_id)}
 
       {:error, _} ->
         :error

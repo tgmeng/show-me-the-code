@@ -1,90 +1,81 @@
 import { hot } from 'react-hot-loader/root';
 import * as React from 'react';
-import { useState } from 'react';
-import { Channel } from 'phoenix';
-import styled from '@emotion/styled';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParam } from 'react-use';
 
-import socket from '@/utils/socket';
+import Global from '@/App/global';
+
+import RoomAPI from '@/apis/room';
+import useChannel from '@/hooks/useChannel';
+import UserModel, { User } from '@/models/user';
+
+import {
+  MainLayout,
+  ToolbarLayout,
+  EditorLayout,
+  ConsoleLayout,
+} from './components/Layout';
+
 import EditorArea from './components/EditorArea';
-
-const ToolbarLayout = styled('header')`
-  grid-area: toolbar;
-`;
-
-const EditorLayout = styled('section')`
-  grid-area: editor;
-`;
-
-const ConsoleLayout = styled('section')`
-  grid-area: console;
-`;
-
-const MainLayout = styled('main')`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  display: grid;
-  grid-template-columns: 1fr 30%;
-  grid-template-rows: 60px 1fr;
-  grid-template-areas:
-    'toolbar toolbar'
-    'editor console';
-`;
+import EntranceModal, { EntranceModalProps } from './components/EntranceModal';
 
 function App() {
-  const [value, setValue] = useState('');
-  const [list, setList] = useState([]);
+  const roomId = useSearchParam('room');
 
-  const channelRef = React.useRef(null);
+  const [visible, setVisible] = useState(false);
+  const { user, userList, channel, join } = useChannel();
 
-  React.useEffect(() => {
-    let channel = socket.channel('room:coding', {});
+  useEffect(() => {
+    if (!roomId || !user) {
+      setVisible(true);
+      return;
+    }
+    setVisible(false);
+  }, [roomId, user]);
 
-    channel.on('new_msg', (payload) => {
-      setList((list) => [...list, `${payload.body}`]);
+  const handleCreate: EntranceModalProps['onCreate'] = (name) =>
+    RoomAPI.create().then((roomId) => {
+      setVisible(false);
+
+      const params = new URLSearchParams(location.search);
+      params.set('room', `${roomId}`);
+      history.replaceState(null, null, `/?${params}`);
+
+      join({ token: Global.getToken(), userName: name, roomId: `${roomId}` });
     });
 
-    channel
-      .join()
-      .receive('ok', (resp) => {
-        console.log('joined successfully', resp);
-      })
-      .receive('error', (resp) => {
-        console.log('unable to join', resp);
-      });
+  const handleJoin: EntranceModalProps['onJoin'] = (name) => {
+    setVisible(false);
+    join({ token: Global.getToken(), userName: name, roomId });
+  };
 
-    channelRef.current = channel;
-  }, []);
+  const filteredUserList = useMemo(
+    () => userList?.filter((otherUser) => otherUser.id !== user?.id) || [],
+    [user, userList]
+  );
 
   return (
     <MainLayout>
-      <ToolbarLayout>Test</ToolbarLayout>
-
-      <EditorLayout>
-        <EditorArea />
-        {/* <input
-        type="text"
-        value={value}
-        onKeyPress={(e) => {
-          if (e.nativeEvent.keyCode === 13) {
-            channelRef.current?.push('new_msg', { body: value });
-            setValue('');
-          }
-        }}
-        onChange={(e) => setValue(e.target.value)}
-      /> */}
-      </EditorLayout>
-
-      <ConsoleLayout>
+      <ToolbarLayout>
         <ul>
-          {list.map((item, index) => (
-            <li key={index}>{item}</li>
+          {userList.map((user) => (
+            <li key={user.id}>{user.name}</li>
           ))}
         </ul>
-      </ConsoleLayout>
+      </ToolbarLayout>
+
+      <EditorLayout>
+        <EditorArea user={user} userList={filteredUserList} channel={channel} />
+      </EditorLayout>
+
+      <ConsoleLayout></ConsoleLayout>
+
+      <EntranceModal
+        roomId={roomId}
+        visible={visible}
+        onCreate={handleCreate}
+        onJoin={handleJoin}
+      />
     </MainLayout>
   );
 }

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title><%= assigns[:page_title] || "ShowMeTheCode" %></title>
-    <%= tag :meta, name: "token", content: Phoenix.Token.sign(@conn, Application.fetch_env!(:show_me_the_code, :user_salt), 1) %>
+    <%= tag :meta, name: "token", content: assigns[:token] %>
     <%= csrf_meta_tag() %>
   </head>
   <body>

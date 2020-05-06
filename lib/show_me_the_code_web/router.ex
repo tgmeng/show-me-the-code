@@ -20,7 +20,9 @@ defmodule ShowMeTheCodeWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", ShowMeTheCodeWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ShowMeTheCodeWeb do
+    pipe_through :api
+
+    post "/room/create", RoomController, :create
+  end
 end

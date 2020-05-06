@@ -12,8 +12,8 @@ defmodule ShowMeTheCode.Application do
       ShowMeTheCodeWeb.Endpoint,
       # Starts a worker by calling: ShowMeTheCode.Worker.start_link(arg)
       # {ShowMeTheCode.Worker, arg},
-      ShowMeTheCodeWeb.Presence,
-      {ShowMeTheCode.Repo, []}
+      ShowMeTheCodeWeb.Presence
+      # ShowMeTheCode.Repo
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
