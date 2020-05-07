@@ -8,7 +8,6 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
 
   def join("room:" <> room_id, %{"user_name" => user_name}, socket) when not is_nil(user_name) do
     if valid_room_id?(room_id) do
-      IO.inspect(socket)
       send(self(), :after_join)
 
       {:ok, %{"user_name" => user_name, user_id: socket.assigns.user_id},

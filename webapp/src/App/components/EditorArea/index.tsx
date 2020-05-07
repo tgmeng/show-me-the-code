@@ -8,6 +8,8 @@ import * as monaco from 'monaco-editor';
 
 import { ChannelEventType } from '@/constants/channel-event-type';
 
+import { createChannelPayload } from '@/utils';
+
 import { User } from '@/models/user';
 
 import MonacoEditor from '@/components/MonacoEditor';
@@ -32,9 +34,9 @@ const EditorArea: React.FC<{
   channel: Channel;
 }> = ({ user = null, userList = [], channel = null }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
-  const [decorationMap, setDecorationMap] = useState<DecorationByUserIdMap>(
-    () => new Map()
-  );
+  const [decorationListMap, setDecorationListMap] = useState<
+    DecorationByUserIdMap
+  >(() => new Map());
 
   useEffect(() => {
     if (!editorRef.current) {
@@ -43,24 +45,25 @@ const EditorArea: React.FC<{
 
     const { current: editor } = editorRef;
 
-    setDecorationMap(
-      userList.reduce<DecorationByUserIdMap>((map, user) => {
-        if (user.selection) {
-          map.set(
-            user.id,
-            editor.deltaDecorations(decorationMap.get(user.id) || [], [
-              {
-                range: user.selection,
-                options: {
-                  className: style.getCursor(),
-                },
-              },
-            ])
-          );
-        }
-        return map;
-      }, new Map())
-    );
+    const neoDecorationListMap: DecorationByUserIdMap = new Map();
+
+    userList.forEach((user) => {
+      const oldDecorationList = decorationListMap.get(user.id) || [];
+      const neoDecorationList = editor.deltaDecorations(
+        oldDecorationList,
+        (user.selection ? [user.selection] : [])
+          .concat(user.secondarySelections)
+          .map((selection) => ({
+            range: selection,
+            options: {
+              className: style.getCursor(),
+            },
+          }))
+      );
+      neoDecorationListMap.set(user.id, neoDecorationList);
+    });
+
+    setDecorationListMap(neoDecorationListMap);
   }, [userList]);
 
   return (
@@ -74,19 +77,38 @@ const EditorArea: React.FC<{
             groupDisposableListToDisposeFn([
               editor.onDidChangeCursorSelection((e) => {
                 const { selection, secondarySelections } = e;
-                channel?.push(ChannelEventType.Selection, {
-                  user: { id: user.id },
-                  body: {
-                    selection,
-                    secondarySelections,
-                  },
-                });
+                channel?.push(
+                  ChannelEventType.Selection,
+                  createChannelPayload({
+                    user,
+                    body: {
+                      selection,
+                      secondarySelections,
+                    },
+                  })
+                );
               }),
               editor.onDidChangeModelContent((e) => {
-                channel?.push(ChannelEventType.Edit, {
-                  user: { id: user.id },
-                  body: e.changes,
-                });
+                channel?.push(
+                  ChannelEventType.Edit,
+                  createChannelPayload({
+                    user,
+                    body: e.changes,
+                  })
+                );
+              }),
+              editor.onDidBlurEditorText((e) => {
+                console.log();
+                channel?.push(
+                  ChannelEventType.Selection,
+                  createChannelPayload({
+                    user,
+                    body: {
+                      selection: null,
+                      secondarySelections: [],
+                    },
+                  })
+                );
               }),
             ])
           }
