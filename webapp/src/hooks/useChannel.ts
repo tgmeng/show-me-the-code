@@ -4,8 +4,11 @@ import { useImmer } from 'use-immer';
 
 import { ChannelEventType } from '@/constants/channel-event-type';
 
+import { ChannelSelectionPayload } from '@/typings';
+
+import { createChannelPayload } from '@/utils';
+
 import UserModel, { User } from '@/models/user';
-import { ChannelSelectionPayload, ChannelPayload } from '@/typings';
 
 export default function useChannel() {
   const [user, setUser] = useState<User | null>(null);
@@ -38,15 +41,20 @@ export default function useChannel() {
       channel
         .join()
         .receive('ok', (resp) => {
-          setUser(
-            UserModel.create({
-              id: resp.user_id,
-              name: resp.user_name,
-            })
-          );
+          const user = UserModel.create({
+            id: resp.user_id,
+            name: resp.user_name,
+          });
+
+          setUser(user);
 
           const presence = new Presence(channel);
           setPresence(presence);
+
+          channel.push(
+            ChannelEventType.SyncRequest,
+            createChannelPayload(undefined)
+          );
         })
         .receive('error', (resp) => {
           console.log('unable to join', resp);
@@ -64,41 +72,17 @@ export default function useChannel() {
 
     const eventOffList = [
       {
-        type: ChannelEventType.Edit,
-        callback: (e) => {
-          if (e.user.id === user.id) {
-            return;
-          }
-        },
-      },
-      {
-        type: ChannelEventType.Sync,
-        callback: (e) => {
-          if (e.user.id === user.id) {
-            return;
-          }
-          console.log(e);
-        },
-      },
-
-      {
         type: ChannelEventType.Selection,
         callback: (e: ChannelSelectionPayload) => {
-          if (e.user.id === user.id) {
-            return;
-          }
-
           const otherUserIndex = userList.findIndex(
-            (otherUser) => otherUser.id === e.user.id
+            (otherUser) => otherUser.id === e.body.userId
           );
 
           if (otherUserIndex !== -1) {
             updateUserList((userList) => {
               userList[otherUserIndex] = UserModel.update(
                 userList[otherUserIndex],
-                {
-                  ...e.body,
-                }
+                { ...e.body }
               );
             });
           }

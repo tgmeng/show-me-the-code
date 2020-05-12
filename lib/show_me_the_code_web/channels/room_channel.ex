@@ -21,9 +21,21 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
     {:error, %{"msg" => "message.user_name is required"}}
   end
 
+  def handle_in("sync_request", _payload, socket) do
+    user_id = Enum.find(Map.keys(Presence.list(socket)), &(&1 !== socket.assigns.user_id))
+
+    broadcast_from!(socket, "sync_request", %{
+      "body" => %{
+        "to" => user_id
+      }
+    })
+
+    {:noreply, socket}
+  end
+
   def handle_in(event_name, payload, socket) do
     if Enum.member?(["sync", "edit", "selection"], event_name) do
-      broadcast!(socket, event_name, Map.take(payload, ["user", "body"]))
+      broadcast_from!(socket, event_name, Map.take(payload, ["body"]))
     end
 
     {:noreply, socket}
