@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useRef, useEffect, useState } from 'react';
-import { noop } from 'lodash';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { debounce } from 'lodash';
 
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Channel } from 'phoenix';
@@ -22,19 +22,10 @@ import {
 
 import { User } from '@/models/user';
 
-import MonacoEditor from '@/components/MonacoEditor';
+import MonacoEditor, { MonacoEditorProps } from '@/components/MonacoEditor';
 
+import { groupDisposableListToDisposeFn, debounceChanges } from './util';
 import * as style from './style';
-
-function groupDisposableListToDisposeFn(list: monaco.IDisposable[]) {
-  return list.reduce<() => void>(
-    (fn, disposable) => () => {
-      fn();
-      disposable.dispose();
-    },
-    noop
-  );
-}
 
 type DecorationByUserIdMap = Map<string, string[]>;
 
@@ -48,6 +39,49 @@ const EditorArea: React.FC<{
     DecorationByUserIdMap
   >(() => new Map());
   const versionIdRef = useRef(0);
+
+  const editorDidMountEffect: MonacoEditorProps['editorDidMountEffect'] = useCallback(
+    (editor) =>
+      groupDisposableListToDisposeFn([
+        editor.onDidChangeCursorSelection(
+          debounce(
+            (e) => {
+              const { selection, secondarySelections } = e;
+              channel?.push(
+                ChannelEventType.Selection,
+                createChannelPayload({
+                  userId: user.id,
+                  selection,
+                  secondarySelections,
+                })
+              );
+            },
+            150,
+            {
+              leading: false,
+              trailing: true,
+            }
+          )
+        ),
+        editor.onDidChangeModelContent((e) => {
+          if (e.versionId === versionIdRef.current + 1) {
+            return;
+          }
+          channel?.push(ChannelEventType.Edit, createChannelPayload(e.changes));
+        }),
+        editor.onDidBlurEditorText(() => {
+          channel?.push(
+            ChannelEventType.Selection,
+            createChannelPayload({
+              selection: null,
+              secondarySelections: [],
+            })
+          );
+        }),
+      ]),
+
+    [user]
+  );
 
   useEffect(() => {
     if (!editorRef.current) {
@@ -70,6 +104,9 @@ const EditorArea: React.FC<{
               className: style.getCursor({
                 isBlinking: isCollapsedSelection(selection),
               }),
+              stickiness:
+                monaco.editor.TrackedRangeStickiness
+                  .NeverGrowsWhenTypingAtEdges,
             },
           }))
       );
@@ -99,7 +136,6 @@ const EditorArea: React.FC<{
           const model = editor.getModel();
 
           const selections = editor.getSelections();
-          console.log(selections);
 
           versionIdRef.current = model.getVersionId();
 
@@ -155,39 +191,7 @@ const EditorArea: React.FC<{
           ref={editorRef}
           width={width}
           height={height}
-          editorDidMountEffect={(editor) =>
-            groupDisposableListToDisposeFn([
-              editor.onDidChangeCursorSelection((e) => {
-                const { selection, secondarySelections } = e;
-                channel?.push(
-                  ChannelEventType.Selection,
-                  createChannelPayload({
-                    userId: user.id,
-                    selection,
-                    secondarySelections,
-                  })
-                );
-              }),
-              editor.onDidChangeModelContent((e) => {
-                if (e.versionId === versionIdRef.current + 1) {
-                  return;
-                }
-                channel?.push(
-                  ChannelEventType.Edit,
-                  createChannelPayload(e.changes)
-                );
-              }),
-              editor.onDidBlurEditorText(() => {
-                channel?.push(
-                  ChannelEventType.Selection,
-                  createChannelPayload({
-                    selection: null,
-                    secondarySelections: [],
-                  })
-                );
-              }),
-            ])
-          }
+          editorDidMountEffect={editorDidMountEffect}
         />
       )}
     </AutoSizer>

@@ -7,7 +7,6 @@ import Global from '@/App/global';
 
 import RoomAPI from '@/apis/room';
 import useChannel from '@/hooks/useChannel';
-import UserModel, { User } from '@/models/user';
 
 import {
   MainLayout,
