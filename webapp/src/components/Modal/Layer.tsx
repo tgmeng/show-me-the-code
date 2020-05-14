@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx, css } from '@emotion/core';
+import { jsx } from '@emotion/core';
 import styled from '@emotion/styled';
 
 const ModalLayerContainer = styled('div')`

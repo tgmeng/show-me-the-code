@@ -13,6 +13,7 @@ export function setRef<T>(
   }
 
   if (isMutableRefObject(ref)) {
+    // eslint-disable-next-line no-param-reassign
     ref.current = value;
   } else if (typeof ref === 'function') {
     ref(value);

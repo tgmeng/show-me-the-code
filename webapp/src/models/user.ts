@@ -1,5 +1,6 @@
-import BaseModel from './base';
 import { Selection } from 'monaco-editor';
+
+import BaseModel from './base';
 
 export interface User {
   id: string;

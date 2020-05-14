@@ -1,7 +1,7 @@
-export class Global {
-  getToken() {
+const Global = {
+  getToken(): string {
     return document.querySelector<HTMLMetaElement>('meta[name=token]').content;
-  }
-}
+  },
+};
 
-export default new Global();
+export default Global;

@@ -24,7 +24,7 @@ import { User } from '@/models/user';
 
 import MonacoEditor, { MonacoEditorProps } from '@/components/MonacoEditor';
 
-import { groupDisposableListToDisposeFn, debounceChanges } from './util';
+import { groupDisposableListToDisposeFn } from './util';
 import * as style from './style';
 
 type DecorationByUserIdMap = Map<string, string[]>;
@@ -92,12 +92,12 @@ const EditorArea: React.FC<{
 
     const neoDecorationListMap: DecorationByUserIdMap = new Map();
 
-    userList.forEach((user) => {
-      const oldDecorationList = decorationListMap.get(user.id) || [];
+    userList.forEach((localUser) => {
+      const oldDecorationList = decorationListMap.get(localUser.id) || [];
       const neoDecorationList = editor.deltaDecorations(
         oldDecorationList,
-        (user.selection ? [user.selection] : [])
-          .concat(user.secondarySelections)
+        (localUser.selection ? [localUser.selection] : [])
+          .concat(localUser.secondarySelections)
           .map((selection) => ({
             range: selection,
             options: {
@@ -110,7 +110,7 @@ const EditorArea: React.FC<{
             },
           }))
       );
-      neoDecorationListMap.set(user.id, neoDecorationList);
+      neoDecorationListMap.set(localUser.id, neoDecorationList);
     });
 
     setDecorationListMap(neoDecorationListMap);
@@ -179,6 +179,7 @@ const EditorArea: React.FC<{
       id: channel.on(type, callback),
     }));
 
+    // eslint-disable-next-line consistent-return
     return () => {
       eventOffList.forEach(({ type, id }) => channel.off(type, id));
     };

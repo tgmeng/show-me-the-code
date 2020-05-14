@@ -25,14 +25,17 @@ const MonacoEditorRenderFn: React.ForwardRefRenderFunction<
   );
 
   useEffect(() => {
-    const editor = monaco.editor.create(nodeRef.current, {
+    const localEditor = monaco.editor.create(nodeRef.current, {
       value: '',
       language: 'javascript',
     });
 
-    setRef(ref, editor);
-    setEditor(editor);
+    setEditor(localEditor);
   }, []);
+
+  useEffect(() => {
+    setRef(ref, editor);
+  }, [editor, ref]);
 
   useEffect(() => (editor ? editorDidMountEffect?.(editor) : undefined), [
     editor,

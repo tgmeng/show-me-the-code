@@ -21,26 +21,23 @@ import EntranceModal, { EntranceModalProps } from './components/EntranceModal';
 function App() {
   const roomId = useSearchParam('room');
 
+  const [webRTCActive, setWebRTCActive] = useState(false);
   const [visible, setVisible] = useState(false);
   const { user, userList, channel, join } = useChannel();
 
-  useEffect(() => {
-    if (!roomId || !user) {
-      setVisible(true);
-      return;
-    }
-    setVisible(false);
-  }, [roomId, user]);
-
   const handleCreate: EntranceModalProps['onCreate'] = (name) =>
-    RoomAPI.create().then((roomId) => {
+    RoomAPI.create().then((localRoomId) => {
       setVisible(false);
 
-      const params = new URLSearchParams(location.search);
-      params.set('room', `${roomId}`);
-      history.replaceState(null, null, `/?${params}`);
+      const params = new URLSearchParams(window.location.search);
+      params.set('room', `${localRoomId}`);
+      window.history.replaceState(null, null, `/?${params}`);
 
-      join({ token: Global.getToken(), userName: name, roomId: `${roomId}` });
+      join({
+        token: Global.getToken(),
+        userName: name,
+        roomId: `${localRoomId}`,
+      });
     });
 
   const handleJoin: EntranceModalProps['onJoin'] = (name) => {
@@ -53,21 +50,34 @@ function App() {
     [user, userList]
   );
 
+  useEffect(() => {
+    if (!roomId || !user) {
+      setVisible(true);
+      return;
+    }
+    setVisible(false);
+  }, [roomId, user]);
+
+  useEffect(() => {}, [webRTCActive]);
+
   return (
     <MainLayout>
       <ToolbarLayout>
-        <ul>
-          {userList.map((user) => (
-            <li key={user.id}>{user.name}</li>
+        <ul style={{ display: 'inline-block' }}>
+          {userList.map((localUser) => (
+            <li key={localUser.id}>{localUser.name}</li>
           ))}
         </ul>
+        <button type="button" onClick={() => setWebRTCActive(!webRTCActive)}>
+          {webRTCActive ? '关闭' : '打开'}视频
+        </button>
       </ToolbarLayout>
 
       <EditorLayout>
         <EditorArea user={user} userList={filteredUserList} channel={channel} />
       </EditorLayout>
 
-      <ConsoleLayout></ConsoleLayout>
+      <ConsoleLayout />
 
       <EntranceModal
         roomId={roomId}

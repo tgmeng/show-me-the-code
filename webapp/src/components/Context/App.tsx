@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 
 import Global from '@/App/global';
 
-const AppContext = createContext<typeof App | undefined>(undefined);
+const AppContext = createContext<typeof Global | undefined>(undefined);
 
 export const AppConsumer = AppContext.Consumer;
 

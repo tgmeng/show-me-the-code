@@ -4,9 +4,10 @@ import { jsx, css } from '@emotion/core';
 import { Fragment } from 'react';
 import * as ReactDOM from 'react-dom';
 
+import useInput from '@/hooks/useInput';
+
 import ModalLayer from '@/components/Modal/Layer';
 import ModalMask from '@/components/Modal/Mask';
-import useInput from '@/hooks/useInput';
 
 export interface EntranceModalProps {
   roomId: string;
@@ -26,6 +27,7 @@ const EntranceModal: React.FC<EntranceModalProps> = ({
   );
   const isNameEmpty = name.trim().length === 0;
   return (
+    // eslint-disable-next-line react/jsx-fragments
     <Fragment>
       {visible && ReactDOM.createPortal(<ModalMask />, document.body)}
       {visible &&
@@ -40,14 +42,22 @@ const EntranceModal: React.FC<EntranceModalProps> = ({
                 <div>
                   <input value={roomId} disabled />
                   <input value={name} onChange={setName} />
-                  <button disabled={isNameEmpty} onClick={() => onJoin(name)}>
+                  <button
+                    type="button"
+                    disabled={isNameEmpty}
+                    onClick={() => onJoin(name)}
+                  >
                     加入
                   </button>
                 </div>
               ) : (
                 <div>
                   <input value={name} onChange={setName} />
-                  <button disabled={isNameEmpty} onClick={() => onCreate(name)}>
+                  <button
+                    type="button"
+                    disabled={isNameEmpty}
+                    onClick={() => onCreate(name)}
+                  >
                     创建
                   </button>
                 </div>
