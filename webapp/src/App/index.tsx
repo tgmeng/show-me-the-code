@@ -1,6 +1,6 @@
 import { hot } from 'react-hot-loader/root';
 import * as React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParam } from 'react-use';
 
 import Global from '@/App/global';
@@ -23,7 +23,13 @@ function App() {
 
   const [webRTCActive, setWebRTCActive] = useState(false);
   const [visible, setVisible] = useState(false);
-  const { user, userList, channel, join } = useChannel();
+  const {
+    user,
+    userList,
+    editorRef,
+    editorDidMountEffect,
+    join,
+  } = useChannel();
 
   const handleCreate: EntranceModalProps['onCreate'] = (name) =>
     RoomAPI.create().then((localRoomId) => {
@@ -44,11 +50,6 @@ function App() {
     setVisible(false);
     join({ token: Global.getToken(), userName: name, roomId });
   };
-
-  const filteredUserList = useMemo(
-    () => userList?.filter((otherUser) => otherUser.id !== user?.id) || [],
-    [user, userList]
-  );
 
   useEffect(() => {
     if (!roomId || !user) {
@@ -74,7 +75,10 @@ function App() {
       </ToolbarLayout>
 
       <EditorLayout>
-        <EditorArea user={user} userList={filteredUserList} channel={channel} />
+        <EditorArea
+          editorRef={editorRef}
+          editorDidMountEffect={editorDidMountEffect}
+        />
       </EditorLayout>
 
       <ConsoleLayout />
