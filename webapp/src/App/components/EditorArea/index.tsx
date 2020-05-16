@@ -5,6 +5,7 @@ import { debounce } from 'lodash';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Channel } from 'phoenix';
 import * as monaco from 'monaco-editor';
+import { usePrevious } from 'react-use';
 
 import {
   ChannelEditPayload,
@@ -39,6 +40,7 @@ const EditorArea: React.FC<{
     DecorationByUserIdMap
   >(() => new Map());
   const versionIdRef = useRef(0);
+  const prevUserList = usePrevious(userList);
 
   const editorDidMountEffect: MonacoEditorProps['editorDidMountEffect'] = useCallback(
     (editor) =>
@@ -92,6 +94,8 @@ const EditorArea: React.FC<{
 
     const neoDecorationListMap: DecorationByUserIdMap = new Map();
 
+    const isExistedSet = new Set();
+
     userList.forEach((localUser) => {
       const oldDecorationList = decorationListMap.get(localUser.id) || [];
       const neoDecorationList = editor.deltaDecorations(
@@ -112,6 +116,16 @@ const EditorArea: React.FC<{
           }))
       );
       neoDecorationListMap.set(localUser.id, neoDecorationList);
+      isExistedSet.add(localUser.id);
+    });
+
+    prevUserList.forEach((localUser) => {
+      if (isExistedSet.has(localUser.id)) {
+        return;
+      }
+      // 清理已退出用户的光标
+      const oldDecorationList = decorationListMap.get(localUser.id) || [];
+      editor.deltaDecorations(oldDecorationList, []);
     });
 
     setDecorationListMap(neoDecorationListMap);
