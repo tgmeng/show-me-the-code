@@ -44,6 +44,7 @@ export default function useChannel() {
           const user = UserModel.create({
             id: resp.user_id,
             name: resp.user_name,
+            color: resp.color,
           });
 
           setUser(user);
@@ -110,6 +111,7 @@ export default function useChannel() {
           UserModel.create({
             id,
             name: first.user_name,
+            color: first.color,
           })
         );
       });

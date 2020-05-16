@@ -102,6 +102,7 @@ const EditorArea: React.FC<{
             range: selection,
             options: {
               className: style.getCursor({
+                color: localUser.color,
                 isBlinking: isCollapsedSelection(selection),
               }),
               stickiness:

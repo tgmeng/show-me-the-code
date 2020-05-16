@@ -15,7 +15,7 @@ export interface CursorProps {
   isBlinking?: boolean;
 }
 export const getCursor = ({
-  color = '#f00',
+  color = '#000',
   isBlinking = false,
 }: CursorProps = {}) => css`
   min-width: 2px;
