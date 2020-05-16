@@ -34,25 +34,25 @@ export default function useChannel() {
 
       socket.connect();
 
-      let channel = socket.channel(`room:${roomId}`, {
+      const localChannel = socket.channel(`room:${roomId}`, {
         user_name: userName,
       });
 
-      channel
+      localChannel
         .join()
         .receive('ok', (resp) => {
-          const user = UserModel.create({
+          const localUser = UserModel.create({
             id: resp.user_id,
             name: resp.user_name,
             color: resp.color,
           });
 
-          setUser(user);
+          setUser(localUser);
 
-          const presence = new Presence(channel);
-          setPresence(presence);
+          const localPresence = new Presence(localChannel);
+          setPresence(localPresence);
 
-          channel.push(
+          localChannel.push(
             ChannelEventType.SyncRequest,
             createChannelPayload(undefined)
           );
@@ -61,7 +61,7 @@ export default function useChannel() {
           console.log('unable to join', resp);
         });
 
-      setChannel(channel);
+      setChannel(localChannel);
     },
     []
   );
@@ -80,9 +80,10 @@ export default function useChannel() {
           );
 
           if (otherUserIndex !== -1) {
-            updateUserList((userList) => {
-              userList[otherUserIndex] = UserModel.update(
-                userList[otherUserIndex],
+            updateUserList((localUserList) => {
+              // eslint-disable-next-line no-param-reassign
+              localUserList[otherUserIndex] = UserModel.update(
+                localUserList[otherUserIndex],
                 { ...e.body }
               );
             });
@@ -94,6 +95,7 @@ export default function useChannel() {
       id: channel.on(type, callback),
     }));
 
+    // eslint-disable-next-line consistent-return
     return () => {
       eventOffList.forEach(({ type, id }) => channel.off(type, id));
     };
@@ -118,6 +120,7 @@ export default function useChannel() {
       updateUserList(() => neoList);
     });
 
+    // eslint-disable-next-line consistent-return
     return () => {
       presence.onSync(null);
     };
