@@ -21,4 +21,5 @@ export const getCursor = ({
   min-width: 2px;
   background-color: ${color};
   animation: ${isBlinking ? `${blink} 1s steps(2, start) infinite` : 'none'};
+  z-index: -1;
 `;
