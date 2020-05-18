@@ -6,19 +6,19 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
 
   @colors [
     # Violet
-    "#9400D3",
+    "#9400d3",
     # Indigo
-    "#4B0082",
+    "#4b0082",
     # Blue
-    "#0000FF",
+    "#0000ff",
     # Green
-    "#00FF00",
+    "#00ff00",
     # Yellow
-    "#FFFF00",
+    "#ffff00",
     # Orange
-    "#FF7F00",
+    "#ff7f00",
     # Red
-    "#FF0000"
+    "#ff0000"
   ]
 
   defp valid_room_id?(room_id) do
@@ -44,8 +44,18 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
 
         send(self(), {:after_join, %{"color" => color}})
 
-        {:ok, %{"user_name" => user_name, "user_id" => socket.assigns.user_id, "color" => color},
-         socket |> assign(:room_id, room_id) |> assign(:user_name, user_name)}
+        {:ok,
+         %{
+           "user_name" => user_name,
+           "user_id" => socket.assigns.user_id,
+           "color" => color,
+           "joined_at" => :os.system_time(:millisecond)
+         },
+         Phoenix.Socket.assign(
+           socket,
+           room_id: room_id,
+           user_name: user_name
+         )}
       end
     else
       {:error, %{"msg" => "room id is invalid"}}
@@ -68,6 +78,25 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("selection", %{"body" => body}, socket) do
+    user_id = body["user_id"]
+
+    meta = get_in(Presence.get_by_key(socket, user_id), [:metas, Access.at(0)])
+
+    {:ok, _} =
+      Presence.update(
+        socket,
+        user_id,
+        %{
+          meta
+          | "selection" => body["selection"],
+            "secondary_selections" => body["secondary_selections"]
+        }
+      )
+
+    {:reply, :ok, socket}
+  end
+
   def handle_in(event_name, payload, socket) do
     if Enum.member?(["sync", "edit", "selection"], event_name) do
       broadcast_from!(socket, event_name, Map.take(payload, ["body"]))
@@ -82,7 +111,9 @@ defmodule ShowMeTheCodeWeb.RoomChannel do
     {:ok, _} =
       Presence.track(socket, socket.assigns.user_id, %{
         "user_name" => socket.assigns.user_name,
-        "color" => data["color"]
+        "color" => data["color"],
+        "selection" => nil,
+        "secondary_selections" => []
       })
 
     {:noreply, socket}

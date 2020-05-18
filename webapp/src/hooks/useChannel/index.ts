@@ -9,7 +9,6 @@ import { usePrevious } from 'react-use';
 import { ChannelEventType } from '@/constants/channel-event-type';
 
 import {
-  ChannelSelectionPayload,
   ChannelEditPayload,
   ChannelSyncRequestPayload,
   ChannelSyncPayload,
@@ -107,41 +106,6 @@ export default function useChannel() {
   }, []);
 
   useEffect(() => {
-    if (!channel || !user) {
-      return;
-    }
-
-    const eventOffList = [
-      {
-        type: ChannelEventType.Selection,
-        callback: (e: ChannelSelectionPayload) => {
-          const otherUserIndex = userList.findIndex(
-            (otherUser) => otherUser.id === e.body.userId
-          );
-
-          if (otherUserIndex !== -1) {
-            updateUserList((localUserList) => {
-              // eslint-disable-next-line no-param-reassign
-              localUserList[otherUserIndex] = UserModel.update(
-                localUserList[otherUserIndex],
-                { ...e.body }
-              );
-            });
-          }
-        },
-      },
-    ].map(({ type, callback }) => ({
-      type,
-      id: channel.on(type, callback),
-    }));
-
-    // eslint-disable-next-line consistent-return
-    return () => {
-      eventOffList.forEach(({ type, id }) => channel.off(type, id));
-    };
-  }, [channel, user, userList]);
-
-  useEffect(() => {
     if (!presence) {
       return;
     }
@@ -154,6 +118,8 @@ export default function useChannel() {
             id,
             name: first.user_name,
             color: first.color,
+            selection: first.selection,
+            secondarySelections: first.secondary_selections,
           })
         );
       });
@@ -164,7 +130,7 @@ export default function useChannel() {
     return () => {
       presence.onSync(null);
     };
-  }, [presence, user]);
+  }, [presence]);
 
   const editorDidMountEffect: MonacoEditorProps['editorDidMountEffect'] = useCallback(
     (editor) =>
@@ -176,9 +142,9 @@ export default function useChannel() {
               channel?.push(
                 ChannelEventType.Selection,
                 createChannelPayload({
-                  userId: user.id,
+                  user_id: user.id,
                   selection,
-                  secondarySelections,
+                  secondary_selections: secondarySelections,
                 })
               );
             },
@@ -199,13 +165,13 @@ export default function useChannel() {
           channel?.push(
             ChannelEventType.Selection,
             createChannelPayload({
+              user_id: user.id,
               selection: null,
-              secondarySelections: [],
+              secondary_selections: [],
             })
           );
         }),
       ]),
-
     [user]
   );
 
