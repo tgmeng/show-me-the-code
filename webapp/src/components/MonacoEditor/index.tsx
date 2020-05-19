@@ -49,6 +49,7 @@ const MonacoEditorRenderFn: React.ForwardRefRenderFunction<
         height,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height]);
 
   return (

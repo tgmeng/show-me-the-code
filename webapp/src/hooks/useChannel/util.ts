@@ -12,7 +12,7 @@ export function groupDisposableListToDisposeFn(list: monaco.IDisposable[]) {
   );
 }
 
-export function debounceChanges<T, R extends (...args: any) => void>(
+export function debounceChanges<T, R extends (...args: unknown[]) => void>(
   onReduce: (result: T, ...args: Parameters<R>) => T,
   getInitialValue: () => T,
   onExecute: (result: T) => void,
@@ -20,7 +20,7 @@ export function debounceChanges<T, R extends (...args: any) => void>(
 ): R {
   let timerId = 0;
   let result: T = getInitialValue();
-  return ((...args: any) => {
+  return ((...args: Parameters<R>) => {
     result = onReduce(result, ...args);
     window.clearTimeout(timerId);
     timerId = window.setTimeout(() => {

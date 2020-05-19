@@ -103,6 +103,7 @@ export default function useChannel() {
       setChannel(null);
       setPresence(null);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -130,6 +131,7 @@ export default function useChannel() {
     return () => {
       presence.onSync(null);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presence]);
 
   const editorDidMountEffect: MonacoEditorProps['editorDidMountEffect'] = useCallback(
@@ -172,6 +174,7 @@ export default function useChannel() {
           );
         }),
       ]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user]
   );
 
@@ -222,6 +225,7 @@ export default function useChannel() {
     });
 
     setDecorationListMap(neoDecorationListMap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userList, user]);
 
   useEffect(() => {

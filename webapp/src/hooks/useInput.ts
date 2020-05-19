@@ -19,6 +19,7 @@ export default function useInput<
     (e: ChangeEvent<E & { [key: string]: S }>) => {
       setValue(e.target[key]);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 

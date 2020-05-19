@@ -10,11 +10,22 @@ export enum Event {
 
 export const eventEmitter = new EventEmitter();
 
-export function isRequestError(data: any) {
+export interface NormalServerResponse {
+  code: number;
+}
+
+export function isNormalServerResponseError(
+  data: unknown
+): data is NormalServerResponse {
+  const { code } = data as NormalServerResponse;
+  return code !== undefined && code !== 200;
+}
+
+export function isRequestError(data: unknown) {
   if (!data) {
     return false;
   }
-  return isError(data) || (data.code !== undefined && data.code !== 200);
+  return isError(data) || isNormalServerResponseError(data);
 }
 
 export type RequestAPIConfig = AxiosRequestConfig & {
@@ -22,7 +33,7 @@ export type RequestAPIConfig = AxiosRequestConfig & {
   rawResponse?: boolean;
 };
 
-export type RequestAPIReturn = Promise<AxiosResponse<any>>;
+export type RequestAPIReturn = Promise<AxiosResponse<unknown>>;
 export type RequestAPI = (config?: RequestAPIConfig) => RequestAPIReturn;
 
 export function createRequestAPI(outsideConfig: RequestAPIConfig): RequestAPI {

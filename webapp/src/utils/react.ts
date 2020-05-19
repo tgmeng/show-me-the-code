@@ -1,6 +1,6 @@
 import { MutableRefObject } from 'react';
 
-export function isMutableRefObject<T>(ref: any): ref is MutableRefObject<T> {
+export function isMutableRefObject<T>(ref: unknown): ref is MutableRefObject<T> {
   return !!ref?.hasOwnProperty('current');
 }
 

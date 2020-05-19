@@ -2,7 +2,7 @@
 // https://github.com/developit/mitt
 
 interface EventHandler {
-  (event?: any, ...args: any[]): void;
+  (event?: unknown, ...args: unknown[]): void;
 }
 
 type EventHandlerMap = Record<string, EventHandler[]>;
@@ -30,7 +30,7 @@ export default class EventEmitter {
     }
   }
 
-  emit(type: string, ...args: any[]): void {
+  emit(type: string, ...args: unknown[]): void {
     const { eventMap } = this;
     (eventMap[type] || []).forEach((handler) => handler(...args));
     (eventMap['*'] || []).forEach((handler) => handler(...args));
